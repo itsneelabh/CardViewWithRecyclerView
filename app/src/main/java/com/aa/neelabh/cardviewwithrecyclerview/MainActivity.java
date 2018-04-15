@@ -38,14 +38,7 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.ThreadPolicy tp = StrictMode.ThreadPolicy.LAX;
         StrictMode.setThreadPolicy(tp);
 
-        try {
-            updateBroadcastMessage();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        /*final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(MainActivity::updateBroadcastMessage, 0, 1, TimeUnit.SECONDS);*/
+        runThread();
     }
 
 
@@ -73,42 +66,106 @@ public class MainActivity extends AppCompatActivity {
 
         return results;
     }
+/*
+    private void runThread() throws IOException {
+        new Thread() {
+            public void run() {
+                int count = 0;
+                int max_count = 30;
+                int id = 1;
 
-    public void updateBroadcastMessage() throws IOException {
-        int count = 0;
-        int max_count = 3;
-        int id = 1;
+                MessageListenerService messageListenerService = new MessageListenerService();
 
-        MessageListenerService messageListenerService = new MessageListenerService();
+                try {
+                    while (count <= max_count) {
+                        runOnUiThread(new Runnable() {
 
-        try {
-            while (count <= max_count) {
-                String url = "http://10.0.2.2:8080/message/" + Integer.toString(id);
-                Log.i(LOG_TAG, "URL to hit : " + url);
+                        Thread.sleep(5000);
 
-                String responseMessage = messageListenerService.run(url);
+                        String url = "http://10.0.2.2:8080/message/" + Integer.toString(id);
+                        Log.i(LOG_TAG, "URL to hit : " + url);
 
-                JsonObject json = new JsonParser().parse(responseMessage).getAsJsonObject();
-                JsonElement messageAsJson = json.get("message");
-                JsonElement statusAsJson = json.get("status");
-                Log.i(LOG_TAG, "messageAsJson received : " + messageAsJson.toString());
+                        String responseMessage = messageListenerService.run(url);
 
-                if (messageAsJson != null && !messageAsJson.toString().isEmpty()
-                    && statusAsJson == null ) {
-                    Log.i(LOG_TAG, "Got message : " + responseMessage);
+                        JsonObject json = new JsonParser().parse(responseMessage).getAsJsonObject();
+                        JsonElement messageAsJson = json.get("message");
+                        JsonElement statusAsJson = json.get("status");
+                        Log.i(LOG_TAG, "messageAsJson received : " + messageAsJson.toString());
 
-                    ((MyRecyclerViewAdapter) mAdapter).addItem(new DataObject(messageAsJson.toString(), R.drawable.gateagent), 0);
-                    id++;
-                } else {
-                    Log.i(LOG_TAG, "No message available yet");
+                        if (messageAsJson != null && !messageAsJson.toString().isEmpty()
+                            && statusAsJson == null) {
+                            Log.i(LOG_TAG, "Got message : " + responseMessage);
+
+                            ((MyRecyclerViewAdapter) mAdapter).addItem(new DataObject(messageAsJson.toString(), R.drawable.gateagent), 0);
+
+                            id++;
+                        } else {
+                            Log.i(LOG_TAG, "No message available yet");
+                        }
+
+                        count = count + 1;
+
+                      }.sta
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-
-                count = count + 1;
-
-                Thread.sleep(1000);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        }.start();
+    }*/
+
+    private void runThread() {
+        new Thread() {
+            public void run() {
+
+                int count = 0;
+                int max_count = 100;
+                int id = 1;
+
+                MessageListenerService messageListenerService = new MessageListenerService();
+
+                try {
+                    while (count <= max_count) {
+                        Thread.sleep(5000);
+
+                        String url = "http://10.0.2.2:8080/message/" + Integer.toString(id);
+
+                        Log.i(LOG_TAG, "URL to hit : " + url);
+
+                        String responseMessage = messageListenerService.run(url);
+
+                        JsonObject json = new JsonParser().parse(responseMessage).getAsJsonObject();
+                        JsonElement messageAsJson = json.get("message");
+                        JsonElement statusAsJson = json.get("status");
+                        Log.i(LOG_TAG, "messageAsJson received : " + messageAsJson.toString());
+
+                        if (messageAsJson != null && !messageAsJson.toString().isEmpty()
+                            && statusAsJson == null) {
+                            Log.i(LOG_TAG, "Got message : " + responseMessage);
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((MyRecyclerViewAdapter) mAdapter).addItem(new DataObject(messageAsJson.toString(), R.drawable.gateagent),
+                                        0);
+                                }
+                            });
+
+                            id++; //increment the counter to next message
+                        } else {
+                            Log.i(LOG_TAG, "No message available yet");
+                        }
+
+                        count = count + 1;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
     }
 }
