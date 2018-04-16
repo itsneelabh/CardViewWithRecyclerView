@@ -1,5 +1,6 @@
 package com.aa.neelabh.cardviewwithrecyclerview;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
@@ -38,7 +39,10 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.ThreadPolicy tp = StrictMode.ThreadPolicy.LAX;
         StrictMode.setThreadPolicy(tp);
 
-        runThread();
+//        runThread();
+        // start service
+        Intent intent = new Intent(this, MessageListenerIntentService.class);
+        startService(intent);
     }
 
 
